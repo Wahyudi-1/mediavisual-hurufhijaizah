@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simulator Hijaiyah Bersambung - Kelas 11</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #f3f4f6;
+            --text-main: #1f2937;
+            --text-light: #6b7280;
+            --canvas-bg: #ffffff;
+            --guide-color: #9ca3af;
+            --grid-color: #e5e7eb;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            touch-action: manipulation;
+        }
+
+        body {
+            background-color: var(--secondary);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        /* HEADER & CONTROLS */
+        .header {
+            padding: 1rem;
+            background-color: white;
+            border-bottom: 1px solid var(--grid-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--primary-dark);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid var(--grid-color);
+            border-radius: 0.5rem;
+            background-color: white;
+            appearance: none;
+            outline: none;
+            font-weight: 600;
+        }
+
+        select:focus {
+            border-color: var(--primary);
+        }
+
+        /* SEGMENTED CONTROL */
+        .segmented-control {
+            display: flex;
+            background-color: var(--secondary);
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+        }
+
+        .segment-btn {
+            flex: 1;
+            padding: 0.5rem;
+            text-align: center;
+            border: none;
+            background: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-light);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .segment-btn.active {
+            background-color: white;
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* CANVAS AREA */
+        .canvas-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            background-color: var(--canvas-bg);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--grid-color);
+        }
+
+        canvas {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 4 / 3;
+            touch-action: none; /* Prevent scroll while drawing */
+            cursor: crosshair;
+            display: block;
+        }
+
+        /* BOTTOM ACTIONS */
+        .actions-panel {
+            padding: 1rem;
+            background-color: white;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .btn:active { opacity: 0.8; }
+        .btn-animate { background-color: var(--success); }
+        .btn-clear { background-color: var(--danger); }
+
+        .explanation-box {
+            background-color: var(--secondary);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: var(--text-main);
+            border-left: 4px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- HEADER -->
+    <div class="header">
+        <h1 class="title">Simulator Sambung Hijaiyah</h1>
+        <div class="control-group">
+            <div class="select-wrapper">
+                <select id="letterSelect">
+                    <option value="alif">Alif (ا)</option>
+                    <option value="ba" selected>Ba / Ta / Tsa (ب)</option>
+                    <option value="jim">Jim / Ha / Kho (ج)</option>
+                    <option value="sin">Sin / Syin (س)</option>
+                    <option value="ain">'Ain / Ghoin (ع)</option>
+                    <option value="kaf">Kaf (ك)</option>
+                    <option value="lam">Lam (ل)</option>
+                    <option value="mim">Mim (م)</option>
+                </select>
+            </div>
+            <div class="segmented-control" id="positionControl">
+                <button class="segment-btn active" data-pos="tunggal">Tunggal</button>
+                <button class="segment-btn" data-pos="awal">Di Awal</button>
+                <button class="segment-btn" data-pos="tengah">Di Tengah</button>
+                <button class="segment-btn" data-pos="akhir">Di Akhir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CANVAS -->
+    <div class="canvas-wrapper">
+        <canvas id="drawCanvas"></canvas>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="actions-panel">
+        <div class="button-group">
+            <button class="btn btn-animate" id="btnAnimate">
+                <span>▶</span> Animasi Alur
+            </button>
+            <button class="btn btn-clear" id="btnClear">
+                <span>✖</span> Hapus Coretan
+            </button>
+        </div>
+        <div class="explanation-box" id="ruleText">
+            Pilih huruf dan posisinya untuk melihat aturan penulisannya.
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * SISTEM DATA HURUF (Path Definition Engine)
+ * Menggunakan sistem kordinat virtual: Lebar 400, Tinggi 300.
+ * Garis dasar (Baseline) berada di Y = 180.
+ * Penulisan Arab dari Kanan ke Kiri (X mengecil).
+ * Format path: "M x y" (Move), "L x y" (Line), "Q cx cy x y" (Quadratic Curve)
+ */
+const BASELINE = 180;
+const H_DATA = {
+    alif: {
+        tunggal: { paths: ["M 200 60 L 200 180"], text: "Alif berdiri tegak dari atas ke bawah. Tidak bisa menyambung ke kiri." },
+        awal:    { paths: ["M 200 60 L 200 180"], text: "Di awal kata, Alif berdiri sendiri dan tidak menyambung ke huruf setelahnya." },
+        tengah:  { paths: ["M 260 180 L 200 180 M 200 180 L 200 60"], text: "Di tengah, disambung dari huruf sebelumnya (kanan), lalu ditarik lurus ke atas." },
+        akhir:   { paths: ["M 260 180 L 200 180 M 200 180 L 200 60"], text: "Di akhir, sama seperti di tengah, bersambung dari kanan lalu naik ke atas." }
+    },
+    ba: { // Mewakili Ba, Ta, Tsa
+        tunggal: { paths: ["M 280 140 Q 280 180 250 180 L 150 180 Q 120 180 120 140"], dots: [{x: 200, y: 210}], text: "Bentuk dasar seperti perahu lebar. Goresan dari kanan atas, melengkung ke garis dasar, lalu naik di ujung kiri." },
+        awal:    { paths: ["M 260 140 Q 260 180 240 180 L 120 180"], dots: [{x: 230, y: 210}], text: "Di awal, bentuknya menjadi satu 'gigi' kecil. Dinding kirinya dihilangkan agar bisa menyambung ke huruf berikutnya." },
+        tengah:  { paths: ["M 320 180 L 240 180 L 240 130 L 230 180 L 120 180"], dots: [{x: 240, y: 210}], text: "Di tengah, ditarik dari huruf sebelumnya, membentuk satu 'gigi' naik ke atas, lalu turun kembali menyambung ke kiri." },
+        akhir:   { paths: ["M 320 180 L 270 180 L 270 140 Q 270 180 240 180 L 140 180 Q 110 180 110 140"], dots: [{x: 190, y: 210}], text: "Di akhir, ditarik dari kanan, lalu kembali membentuk perut/perahu penuh yang ditutup pada ujung kirinya." }
+    },
+    jim: { // Mewakili Jim, Ha, Kho
+        tunggal: { paths: ["M 180 110 Q 230 90 260 110 L 220 150 Q 320 200 200 260 Q 150 240 150 200"], dots: [{x: 210, y: 190}], text: "Memiliki kepala seperti segitiga dan perut melengkung besar ke bawah menembus garis dasar." },
+        awal:    { paths: ["M 180 110 Q 230 90 260 110 L 220 150 Q 220 180 190 180 L 100 180"], dots: [{x: 200, y: 210}], text: "PENTING: Di awal, perut besarnya HILANG. Diganti dengan tarikan lurus di atas garis dasar untuk menyambung." },
+        tengah:  { paths: ["M 320 180 L 250 180 M 200 110 Q 240 90 260 110 L 230 150 Q 230 180 200 180 L 100 180"], dots: [{x: 220, y: 210}], text: "Di tengah, sambungan dari kanan naik sedikit, lalu membentuk kepala Jim. Perutnya tetap dihilangkan." },
+        akhir:   { paths: ["M 320 180 L 250 180 M 200 110 Q 240 90 260 110 L 220 150 Q 320 200 200 260 Q 160 240 160 200"], dots: [{x: 220, y: 190}], text: "Di akhir, menyambung dari kanan, dan perut besarnya yang melengkung ke bawah garis KEMBALI utuh." }
+    },
+    sin: { // Mewakili Sin, Syin
+        tunggal: { paths: ["M 280 140 Q 270 180 260 180 Q 250 180 250 140 Q 240 180 230 180 Q 220 180 220 140 Q 220 180 200 180 Q 300 280 150 260 Q 130 240 130 210"], text: "Memiliki 3 'gigi' kecil di atas garis dasar, dan satu perut besar melengkung di bawah garis." },
+        awal:    { paths: ["M 280 140 Q 270 180 260 180 Q 250 180 250 140 Q 240 180 230 180 Q 220 180 220 140 Q 220 180 200 180 L 100 180"], text: "PENTING: Di awal, pertahankan 3 giginya, namun perut besarnya HILANG dan diganti garis lurus sejajar garis dasar." },
+        tengah:  { paths: ["M 320 180 L 280 180 M 280 140 Q 270 180 260 180 Q 250 180 250 140 Q 240 180 230 180 Q 220 180 220 140 Q 220 180 200 180 L 100 180"], text: "Di tengah, sambung dari kanan, buat 3 gigi tegak, lalu tarik garis lurus lagi ke kiri. Tanpa perut." },
+        akhir:   { paths: ["M 340 180 L 280 180 M 280 140 Q 270 180 260 180 Q 250 180 250 140 Q 240 180 230 180 Q 220 180 220 140 Q 220 180 200 180 Q 300 280 150 260 Q 130 240 130 210"], text: "Di akhir, disambung dari kanan, lalu 3 gigi, dan perut besarnya ke bawah garis KEMBALI utuh." }
+    },
+    ain: {
+        tunggal: { paths: ["M 220 110 Q 200 80 180 110 Q 180 130 200 150 Q 300 180 200 260 Q 140 240 140 200"], text: "Bentuk 'Ain terdiri dari kepala (mulut terbuka) kecil di atas garis, dan perut sangat besar melengkung di bawah garis." },
+        awal:    { paths: ["M 220 110 Q 200 80 180 110 Q 180 130 200 150 Q 200 180 170 180 L 100 180"], text: "Di awal, perutnya dihilangkan. Hanya kepala (mulut terbuka) yang digambar lalu disambung lurus ke kiri." },
+        tengah:  { paths: ["M 300 180 L 230 180 L 200 120 L 160 140 L 190 180 L 100 180"], text: "PENTING: Di tengah, bentuknya berubah drastis! Menjadi bentuk segitiga terbalik yang TERTUTUP (diblok)." },
+        akhir:   { paths: ["M 300 180 L 230 180 L 200 120 L 160 140 L 190 180 Q 300 220 180 270 Q 130 250 130 200"], text: "Di akhir, kepalanya tetap tertutup (seperti di tengah), namun perut besarnya di bawah garis kembali muncul." }
+    },
+    kaf: {
+        tunggal: { paths: ["M 280 60 L 280 180 L 150 180 Q 120 180 120 140", "M 220 120 L 200 120 L 210 140 L 190 140"], text: "Berdiri tegak dengan alas panjang di garis dasar, diakhiri lekukan ke atas. Terdapat tanda seperti hamzah di dalamnya." },
+        awal:    { paths: ["M 260 60 L 180 120 L 260 150 L 180 180 L 100 180"], text: "Berubah total! Tidak tegak lagi, melainkan miring zigzag (seperti S terbalik kaku) bersandar pada garis dasar." },
+        tengah:  { paths: ["M 320 180 L 260 180 M 260 60 L 180 120 L 260 150 L 180 180 L 100 180"], text: "Sama seperti di awal (zigzag miring), hanya saja ditarik dari sambungan sebelah kanan." },
+        akhir:   { paths: ["M 340 180 L 280 180 M 280 60 L 280 180 L 150 180 Q 120 180 120 140", "M 220 120 L 200 120 L 210 140 L 190 140"], text: "Di akhir, bentuknya kembali tegak seperti bentuk tunggal dengan tanda hamzah di tengahnya." }
+    },
+    lam: {
+        tunggal: { paths: ["M 200 60 L 200 200 Q 200 240 160 240 Q 120 240 120 200"], text: "Tiang lurus tinggi menjulang, lalu turun menembus garis dasar membentuk perut kail melengkung." },
+        awal:    { paths: ["M 200 60 L 200 180 L 100 180"], text: "Di awal, perut kail di bawah garis hilang, diganti garis lurus sejajar untuk menyambung." },
+        tengah:  { paths: ["M 280 180 L 200 180 L 200 60 M 200 180 L 100 180"], text: "Dari kanan, naik tegak tinggi (jangan sampai tertukar dengan Alif, Lam disambung ke kiri setelah turun kembali)." },
+        akhir:   { paths: ["M 280 180 L 200 180 M 200 60 L 200 200 Q 200 240 160 240 Q 120 240 120 200"], text: "Di akhir, menyambung dari kanan lalu tiang tinggi turun kembali membentuk kail penuh di bawah garis." }
+    },
+    mim: {
+        tunggal: { paths: ["M 220 160 Q 200 140 180 160 Q 180 180 200 180 L 220 160 L 220 280"], text: "Kepala bulat kecil melengkung ke bawah, diikuti ekor panjang lurus menembus ke bawah." },
+        awal:    { paths: ["M 220 160 Q 200 140 180 160 Q 180 180 200 180 L 220 160 Q 220 180 180 180 L 100 180"], text: "Ekor panjangnya hilang, setelah membentuk kepala bulat dilanjutkan dengan tarikan lurus ke kiri." },
+        tengah:  { paths: ["M 300 180 L 220 180 M 220 160 Q 200 140 180 160 Q 180 180 200 180 L 220 160 Q 220 180 180 180 L 100 180"], text: "Menyambung dari kanan, turun sedikit untuk membuat kepala bulat, lalu lurus lagi ke kiri. Ekor tetap hilang." },
+        akhir:   { paths: ["M 300 180 L 220 180 M 220 160 Q 200 140 180 160 Q 180 180 200 180 L 220 160 L 220 280"], text: "Kepala bulatnya turun sedikit dari garis, lalu ekor panjang tegaknya kembali muncul ke bawah." }
+    }
+};
+
+/** APP STATE & CORE VARIABLES */
+const canvas = document.getElementById('drawCanvas');
+const ctx = canvas.getContext('2d');
+const letterSelect = document.getElementById('letterSelect');
+const posBtns = document.querySelectorAll('.segment-btn');
+const btnClear = document.getElementById('btnClear');
+const btnAnimate = document.getElementById('btnAnimate');
+const ruleText = document.getElementById('ruleText');
+
+let state = {
+    letter: 'ba',
+    pos: 'tunggal',
+    userStrokes: [], // Format: [ [{x,y}, {x,y}], [{x,y}] ]
+    currentStroke: null,
+    isDrawing: false,
+    guidePaths: [], // Array of points for dashed lines
+    dots: [], // Tambahan: Inisialisasi array dots untuk mencegah error undefined
+    animProgress: 0,
+    isAnimating: false,
+    animPathIndex: 0
+};
+
+// Canvas Resolution Setup (For crisp rendering on Retina/Mobile)
+const LOGICAL_WIDTH = 400;
+const LOGICAL_HEIGHT = 300;
+let scaleFactor = 1;
+
+function resizeCanvas() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    
+    canvas.width = rect.width * dpr;
+    canvas.height = (rect.width * 0.75) * dpr; // 4:3 aspect ratio
+    
+    scaleFactor = canvas.width / LOGICAL_WIDTH;
+    
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset
+    ctx.scale(scaleFactor, scaleFactor);
+    render();
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+/** PATH PARSER ENGINE (String -> Array of Points) */
+function parsePathString(pathStr) {
+    let points = [];
+    let tokens = pathStr.split(' ');
+    let i = 0;
+    let currX = 0, currY = 0;
+    
+    while(i < tokens.length) {
+        let cmd = tokens[i];
+        if (cmd === 'M') {
+            currX = parseFloat(tokens[i+1]); currY = parseFloat(tokens[i+2]);
+            points.push({x: currX, y: currY});
+            i += 3;
+        } else if (cmd === 'L') {
+            let endX = parseFloat(tokens[i+1]), endY = parseFloat(tokens[i+2]);
+            // Interpolate points for smooth animation & dashing
+            let dist = Math.hypot(endX-currX, endY-currY);
+            let steps = Math.max(10, Math.floor(dist / 2)); 
+            for(let j=1; j<=steps; j++) {
+                points.push({
+                    x: currX + (endX-currX)*j/steps, 
+                    y: currY + (endY-currY)*j/steps
+                });
+            }
+            currX = endX; currY = endY;
+            i += 3;
+        } else if (cmd === 'Q') {
+            let cx = parseFloat(tokens[i+1]), cy = parseFloat(tokens[i+2]);
+            let endX = parseFloat(tokens[i+3]), endY = parseFloat(tokens[i+4]);
+            let steps = 40; // High density for smooth curves
+            for(let j=1; j<=steps; j++) {
+                let t = j/steps;
+                let xt = (1-t)*(1-t)*currX + 2*(1-t)*t*cx + t*t*endX;
+                let yt = (1-t)*(1-t)*currY + 2*(1-t)*t*cy + t*t*endY;
+                points.push({x: xt, y: yt});
+            }
+            currX = endX; currY = endY;
+            i += 5;
+        } else {
+            i++; // fallback
+        }
+    }
+    return points;
+}
+
+function updateGuideData() {
+    const data = H_DATA[state.letter][state.pos];
+    ruleText.innerText = data.text;
+    
+    state.guidePaths = [];
+    if(data.paths) {
+        data.paths.forEach(str => {
+            state.guidePaths.push(parsePathString(str));
+        });
+    }
+    state.dots = data.dots || [];
+    state.isAnimating = false; // reset animation
+    state.userStrokes = []; // auto clear drawing on change
+    render();
+}
+
+/** RENDER ENGINE */
+function render() {
+    // 1. Clear & Draw Background Grid
+    ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([]);
+    // Draw horizontal lines
+    for(let y = 60; y <= 260; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(LOGICAL_WIDTH, y);
+        ctx.stroke();
+    }
+
+    // Highlight baseline
+    ctx.strokeStyle = '#d1d5db';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, BASELINE);
+    ctx.lineTo(LOGICAL_WIDTH, BASELINE);
+    ctx.stroke();
+
+    // 2. Draw Guide (Dashed grey outline)
+    ctx.strokeStyle = '#9ca3af';
+    ctx.lineWidth = 12;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.setLineDash([1, 15]); // Creates dotted effect
+    
+    state.guidePaths.forEach(path => {
+        if(path.length === 0) return;
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+        for(let i=1; i<path.length; i++) {
+            ctx.lineTo(path[i].x, path[i].y);
+        }
+        ctx.stroke();
+    });
+
+// Draw static dots
+ctx.fillStyle = '#9ca3af';
+if (state.dots) {
+    state.dots.forEach(dot => {
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, 6, 0, Math.PI*2);
+        ctx.fill();
+    });
+}
+
+// 3. Draw Arrows & Numbers (Directional guide)
+ctx.setLineDash([]);
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    state.guidePaths.forEach((path, idx) => {
+        if(path.length < 5) return;
+        const pt1 = path[0];
+        const pt2 = path[4]; // slightly ahead for angle
+        
+        // Draw red arrow head
+        const angle = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x);
+        ctx.fillStyle = '#ef4444';
+        ctx.save();
+        ctx.translate(pt1.x, pt1.y);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-10, -5);
+        ctx.lineTo(-10, 5);
+        ctx.fill();
+        ctx.restore();
+
+        // Draw number background
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(pt1.x, pt1.y - 15, 10, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Draw number
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText(idx + 1, pt1.x, pt1.y - 15);
+    });
+
+    // 4. Draw User Strokes (Solid Blue)
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.setLineDash([]);
+    
+    state.userStrokes.forEach(stroke => {
+        if(stroke.length === 0) return;
+        ctx.beginPath();
+        ctx.moveTo(stroke[0].x, stroke[0].y);
+        for(let i=1; i<stroke.length; i++) {
+            ctx.lineTo(stroke[i].x, stroke[i].y);
+        }
+        ctx.stroke();
+    });
+
+    // 5. Draw Animation (Virtual Pen)
+    if(state.isAnimating && state.guidePaths.length > 0) {
+        const path = state.guidePaths[state.animPathIndex];
+        if(path && path.length > 0) {
+            // Draw trail
+            ctx.strokeStyle = '#10b981'; // Green trail
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(path[0].x, path[0].y);
+            let limit = Math.floor(state.animProgress);
+            for(let i=1; i<=limit; i++) {
+                if(i < path.length) ctx.lineTo(path[i].x, path[i].y);
+            }
+            ctx.stroke();
+
+            // Draw Pen Point
+            let currentPt = path[limit] || path[path.length-1];
+            ctx.fillStyle = '#10b981';
+            ctx.beginPath();
+            ctx.arc(currentPt.x, currentPt.y, 8, 0, Math.PI*2);
+            ctx.fill();
+            
+            // White inner dot
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(currentPt.x, currentPt.y, 3, 0, Math.PI*2);
+            ctx.fill();
+        }
+    }
+}
+
+/** ANIMATION LOOP */
+function animate() {
+    if(!state.isAnimating) return;
+    
+    const currentPath = state.guidePaths[state.animPathIndex];
+    if(currentPath) {
+        state.animProgress += 1.5; // Speed
+        
+        if(state.animProgress >= currentPath.length) {
+            // Move to next stroke
+            state.animPathIndex++;
+            state.animProgress = 0;
+            
+            if(state.animPathIndex >= state.guidePaths.length) {
+                // Done animating
+                setTimeout(() => {
+                    state.isAnimating = false;
+                    render();
+                }, 1000);
+            }
+        }
+    }
+    render();
+    if(state.isAnimating) requestAnimationFrame(animate);
+}
+
+/** TOUCH / MOUSE INTERACTION (Drawing) */
+function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    // Normalize coordinates back to LOGICAL_WIDTH scale
+    const x = ((e.clientX || e.touches[0].clientX) - rect.left) * (LOGICAL_WIDTH / rect.width);
+    const y = ((e.clientY || e.touches[0].clientY) - rect.top) * (LOGICAL_HEIGHT / rect.height);
+    return {x, y};
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); // Stop scrolling
+    state.isDrawing = true;
+    state.currentStroke = [getCanvasCoords(e)];
+    state.userStrokes.push(state.currentStroke);
+    render();
+});
+
+canvas.addEventListener('pointermove', (e) => {
+    e.preventDefault();
+    if(!state.isDrawing) return;
+    state.currentStroke.push(getCanvasCoords(e));
+    render(); // Real-time redraw
+});
+
+canvas.addEventListener('pointerup', () => { state.isDrawing = false; });
+canvas.addEventListener('pointercancel', () => { state.isDrawing = false; });
+canvas.addEventListener('pointerout', () => { state.isDrawing = false; });
+
+/** UI EVENT LISTENERS */
+letterSelect.addEventListener('change', (e) => {
+    state.letter = e.target.value;
+    updateGuideData();
+});
+
+posBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        // Update active class UI
+        posBtns.forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        
+        // Update state
+        state.pos = e.target.dataset.pos;
+        updateGuideData();
+    });
+});
+
+btnClear.addEventListener('click', () => {
+    state.userStrokes = [];
+    render();
+});
+
+btnAnimate.addEventListener('click', () => {
+    state.userStrokes = []; // Clear user drawing to clearly see animation
+    state.animPathIndex = 0;
+    state.animProgress = 0;
+    state.isAnimating = true;
+    animate();
+});
+
+// Initialization
+setTimeout(() => {
+    updateGuideData(); // Memanggil update data terlebih dahulu
+    resizeCanvas();    // Baru kemudian merender ulang ukuran kanvas
+}, 100);
+
+</script>
+</body>
+</html>
